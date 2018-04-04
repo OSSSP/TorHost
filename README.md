@@ -12,7 +12,7 @@ Options
 
     Options:
       -h, --help            show this help message and exit
-      -p PORT, --port=PORT  Specify port to host hidden service on (default: 80)
+      -p PORT, --port=PORT  Specify port to host onion service on (default: 80)
       -k, --keepalive       Upload file to multiple users instead of one
       -d, --debug           Enable debugging information
 
