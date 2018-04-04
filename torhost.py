@@ -47,20 +47,20 @@ def getSocket():
 		print(term.format("Unable to bind to any port! Error: " + msg[1], term.Color.RED))
 		sys.exit(1)
 
-# Creates an ephemeral hidden service, connects it to the locally bound socket,
+# Creates an ephemeral onion service, connects it to the locally bound socket,
 # and begins hosting the file
 def startHiddenService(localPort, controlPort, filename, sock):
-	print "Starting hidden service (this may take a while) ..."
+	print "Starting onion service (this may take a while)..."
 	with Controller.from_port(port = controlPort) as ctrl:
 		ctrl.authenticate()
 		state = ctrl.create_ephemeral_hidden_service({ServicePort: localPort}, await_publication = True, detached = True)
-		onion = "Service available at " + str(state.service_id) + ".onion"
+		onion = "File available at " + str(state.service_id) + ".onion"
 		if( ServicePort != DefaultServicePort ):
 			onion = onion + " (port " + str(ServicePort) + ")"
 		print(term.format(onion, term.Color.GREEN))
 		hostFile(filename, sock)
 		# Note: We must pause *here*, if we leave the 'with Controller' section
-		# the hidden service is destroyed before we can finish the transfer!
+		# the onion service is destroyed before we can finish the transfer!
 		print("Waiting for Tor to clean up before exiting...")
 		time.sleep(DelayTorExit)
 
@@ -170,7 +170,7 @@ def parseOptions():
 	parser.add_argument("-p", "--port", 
 	                  action="store", type=int, dest="port", default=80,
 	                  metavar="PORT",
-	                  help="Specify port to host hidden service on ")
+	                  help="Specify port to host onion service on ")
 	parser.add_argument("-k", "--keepalive", 
 	                  action="store_true", dest="keepalive", default=False,
 	                  help="Upload file to multiple users instead of one")

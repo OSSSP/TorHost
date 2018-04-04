@@ -5,7 +5,7 @@ TorHost aims to make hosting files on Tor trivial. It's as easy as:
 
     torhost foo
 
-Then wait while TorHost fires up Tor, connects to the network, generates a hidden service, hosts 'foo' on the hidden service, and prints out the onion address for users to download from. That's it.
+Then sit back and relax while TorHost does the rest of the work. It will start Tor, connect to the Tor network, generate an onion service, host 'foo' on the hidden service, and finally will print out the onion address for users to download from. That's it.
 
 Options
 -------
@@ -19,4 +19,4 @@ Options
 Requirements
 ------------
 
-TorHost uses Ephemeral Hidden Services, a relatively new feature of Tor. It therefore requires (at a minimum) Stem 1.4, and Tor 0.2.7.1-alpha or better. All other dependencies should have come with Python.
+TorHost requires Stem 1.4 or later, and Tor 0.2.7.1-alpha or later. All other dependencies should have come with Python.
