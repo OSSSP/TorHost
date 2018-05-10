@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os, sys, signal, socket, time, stem.process, argparse
+import os, sys, signal, socket, time, stem.process, argparse, tempfile
 from stem.control import Controller
 from stem.util import term
 from thread import *
@@ -134,19 +134,22 @@ def startTor():
 	let the system pick a random port by binding a socket, unbinding the port, 
 	then immediately starting Tor using the now-free port.
 	"""
-	(sock, port) = getSocket()
-	sock.close
-	debugMsg("Found random control port: " + str(port))
+	(sock1, randControlPort) = getSocket()
+	(sock2, randSOCKSPort) = getSocket()
+	sock1.close
+	sock2.close
+	debugMsg("Found random control port: " + str(randControlPort))
+	debugMsg("Found random SOCKS port: " + str(randSOCKSPort))
 	tor = stem.process.launch_tor_with_config(
 		config = {
-			'ControlPort': str(port),
-			# We should probably also generate a random password and use it for
-			# authentication, but that is a task for another day.
+			'ControlPort': str(randControlPort),
+			'SOCKSPort': str(randSOCKSPort),
+			'DataDirectory': tempfile.mkdtemp(),
 		},
 		init_msg_handler = bootstrapTor,
 		take_ownership = True,
 	)
-	return (tor, port)
+	return (tor, randControlPort)
 
 # This is a wrapper so I don't have debug if-statements everywhere
 def debugMsg(msg):
