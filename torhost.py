@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys, signal, socket, time, os.path, stem.process, argparse
+import os, sys, signal, socket, time, stem.process, argparse
 from stem.control import Controller
 from stem.util import term
 from thread import *
@@ -25,6 +25,7 @@ ChunkSize = 1000 # How many bytes to read from a file at a time
 #
 ServicePort = DefaultServicePort
 KeepAlive = False
+RawMode = False
 DebugMode = False
 FileName = ""
 
@@ -64,12 +65,25 @@ def startHiddenService(localPort, controlPort, filename, sock):
 		print("Waiting for Tor to clean up before exiting...")
 		time.sleep(DelayTorExit)
 
+# Sends HTTP headers for a binary file before uploading it
+# so the Tor Browser will download data correctly
+def sendHeaders(filename, client):
+	filesize = os.path.getsize(filename)
+	bname = os.path.basename(filename)
+	client.sendall("HTTP/1.1 200 OK\n")
+	client.sendall("Content-Type: application/octet-stream\n")
+	client.sendall("Content-Length: %d\n" % filesize)
+	client.sendall("Content-Disposition: attachment; filename=\"%s\"\n" % bname)
+	client.sendall("\n")
+
 # Sends the file once, to a single client
 # If you want multiple clients, run this function in a loop with threads
 def uploadFile(filename, client):
 	try:
 		print(term.format(("Uploading file '%s' to new client" % filename), 
 		      term.Color.YELLOW))
+		if( not RawMode ):
+			sendHeaders(filename, client)
 		f = open(filename, "rb")
 		while( True ):
 			data = f.read(ChunkSize)
@@ -163,6 +177,7 @@ def parseOptions():
 	# This should be the only function with write permission to global settings
 	global ServicePort
 	global KeepAlive
+	global RawMode
 	global DebugMode
 	global FileName
 	descr = "Easily and anonymously host files over Tor."
@@ -174,6 +189,9 @@ def parseOptions():
 	parser.add_argument("-k", "--keepalive", 
 	                  action="store_true", dest="keepalive", default=False,
 	                  help="Upload file to multiple users instead of one")
+	parser.add_argument("-r", "--raw", 
+	                  action="store_true", dest="raw", default=False,
+	                  help="Transfer raw bytes (no http headers)")
 	parser.add_argument("-d", "--debug", 
 	                  action="store_true", dest="debug", default=False,
 	                  help="Enable debugging information")
@@ -187,11 +205,13 @@ def parseOptions():
 		sys.exit(1)
 	ServicePort = options.port
 	KeepAlive = options.keepalive
+	RawMode = options.raw
 	DebugMode = options.debug
 	FileName = options.file[0]
 	debugMsg("=== TorHost Configuration ===")
 	debugMsg("Service port: " + str(ServicePort))
 	debugMsg("KeepAlive: " + str(KeepAlive))
+	debugMsg("RawMode: " + str(RawMode))
 	debugMsg("DebugMode: " + str(DebugMode))
 	debugMsg("FileName: " + str(FileName))
 

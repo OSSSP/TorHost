@@ -6,7 +6,7 @@
 .Nd An anonymous short term file-hosting utility.
 .Sh SYNOPSIS
 .Nm
-.Op Fl kd
+.Op Fl kdr
 .Op Fl p Ar port
 .Ar file
 .Sh DESCRIPTION
@@ -19,6 +19,8 @@ The following options are available:
 Specify the port to host the hidden service on (default: 80).
 .It Fl k -keepalive
 Keep listening for additional network connections; do not exit after the file has been uploaded once.
+.It Fl r -raw
+Transfer raw bytes (no http headers)
 .It Fl d -debug
 Enable debugging information.
 .El
@@ -31,7 +33,7 @@ The following is an example usage of
 This should yield output similar to:
 .Pp
 .Dl Starting Tor...
-.Dl Hosting file at kjnfkjngfkdgnkfgnkdfgjn.onion (port 80)
+.Dl Hosting file at kjnfkjngfkdgnkfgnkdfgjn.onion
 .Dl Press Control-C to abort file hosting.
 .Pp
 At this stage someone may connect to kjnfkjngfkdgnkfgnkdfgjn.onion with the Tor Browser Bundle to download the file. They could also use Tor as a SOCKS proxy and use a utility like netcat or curl to download.
