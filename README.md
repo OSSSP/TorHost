@@ -13,7 +13,14 @@ Options
     Options:
       -h, --help            show this help message and exit
       -p PORT, --port=PORT  Specify port to host onion service on (default: 80)
+      -c CONTROLPORT, --controlport=CONTROLPORT  
+                            Specify control port of already running Tor instance
+                            (default: start new Tor instance)
+      -P PASSWORD, --password=PASSWORD
+                            Specify control password of already running Tor
+                            instance
       -k, --keepalive       Upload file to multiple users instead of one
+      -r, --raw             Transfer raw bytes (no http headers)
       -d, --debug           Enable debugging information
 
 Requirements
