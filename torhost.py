@@ -24,6 +24,8 @@ ChunkSize = 1000 # How many bytes to read from a file at a time
 # These are global options, and are set by command line arguments
 #
 ServicePort = DefaultServicePort
+ControlPort = None
+ControlPassword = ""
 KeepAlive = False
 RawMode = False
 DebugMode = False
@@ -50,10 +52,10 @@ def getSocket():
 
 # Creates an ephemeral onion service, connects it to the locally bound socket,
 # and begins hosting the file
-def startHiddenService(localPort, controlPort, filename, sock):
+def startHiddenService(localPort, controlPort, password, filename, sock):
 	print "Starting onion service (this may take a while)..."
 	with Controller.from_port(port = controlPort) as ctrl:
-		ctrl.authenticate()
+		ctrl.authenticate(password)
 		state = ctrl.create_ephemeral_hidden_service({ServicePort: localPort}, await_publication = True, detached = True)
 		onion = "File available at " + str(state.service_id) + ".onion"
 		if( ServicePort != DefaultServicePort ):
@@ -176,6 +178,8 @@ class Parser(argparse.ArgumentParser):
 def parseOptions():
 	# This should be the only function with write permission to global settings
 	global ServicePort
+	global ControlPort
+	global ControlPassword
 	global KeepAlive
 	global RawMode
 	global DebugMode
@@ -186,6 +190,14 @@ def parseOptions():
 	                  action="store", type=int, dest="port", default=80,
 	                  metavar="PORT",
 	                  help="Specify port to host onion service on ")
+	parser.add_argument("-c", "--controlport",
+	                  action="store", type=int, dest="controlport", default=-1,
+	                  metavar="CONTROLPORT",
+	                  help="Specify control port of already running Tor instance (default: start new Tor instance)")
+	parser.add_argument("-P", "--password",
+	                  action="store", type=str, dest="password", default="",
+	                  metavar="PASSWORD",
+	                  help="Specify control password of already running Tor instance")
 	parser.add_argument("-k", "--keepalive", 
 	                  action="store_true", dest="keepalive", default=False,
 	                  help="Upload file to multiple users instead of one")
@@ -203,6 +215,9 @@ def parseOptions():
 		print("Impossible to bind to desired port!")
 		parser.print_help()
 		sys.exit(1)
+	if( options.controlport > 1 ):
+		ControlPort = options.controlport
+	ControlPassword = options.password
 	ServicePort = options.port
 	KeepAlive = options.keepalive
 	RawMode = options.raw
@@ -210,6 +225,8 @@ def parseOptions():
 	FileName = options.file[0]
 	debugMsg("=== TorHost Configuration ===")
 	debugMsg("Service port: " + str(ServicePort))
+	debugMsg("Control port: " + str(ControlPort))
+	debugMsg("Control password: " + str(ControlPassword))
 	debugMsg("KeepAlive: " + str(KeepAlive))
 	debugMsg("RawMode: " + str(RawMode))
 	debugMsg("DebugMode: " + str(DebugMode))
@@ -221,7 +238,11 @@ if __name__ == '__main__':
 	signal.signal(signal.SIGINT, sigExit) # Register signal handler
 	(sock, localPort) = getSocket()       # Bind to a socket for hosting files
 	debugMsg("Hosting on local port: " + str(localPort))
-	print("Starting Tor...")
-	(tor, controlPort) = startTor()       # Start the Tor daemon
-	startHiddenService(localPort, controlPort, FileName, sock) # Host with Tor
-	tor.kill() # Kill the daemon cleanly if we get to this point
+	if( ControlPort == None ):
+		print("Starting Tor...")
+		(tor, controlPort) = startTor()       # Start the Tor daemon
+		startHiddenService(localPort, controlPort, "", FileName, sock)
+		tor.kill() # Kill the daemon cleanly if we get to this point
+	else:
+		print("Connecting to running Tor instance...")
+		startHiddenService(localPort, ControlPort, ControlPassword, FileName, sock)

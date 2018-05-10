@@ -8,6 +8,8 @@
 .Nm
 .Op Fl kdr
 .Op Fl p Ar port
+.Op Fl c Ar port
+.Op Fl P Ar password
 .Ar file
 .Sh DESCRIPTION
 .Pp
@@ -17,6 +19,10 @@ The following options are available:
 .Bl -tag -width indent
 .It Fl p -port
 Specify the port to host the hidden service on (default: 80).
+.It Fl c -controlport
+Specify control port of already running Tor instance (default: start new Tor instance).
+.It Fl P -password
+Specify control password of already running Tor instance (default: none).
 .It Fl k -keepalive
 Keep listening for additional network connections; do not exit after the file has been uploaded once.
 .It Fl r -raw
